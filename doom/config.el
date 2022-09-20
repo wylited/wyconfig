@@ -1,34 +1,9 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
-
-;; https://github.com/doomemacs/doomemacs/blob/develop/core/templates/config.example.el
-
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
 (setq user-full-name "wylited"
       user-mail-address "wylited@gmail.com")
-
-;; Doom exposes five (optional) variables for controlling fonts in Doom:
-;;
-;; - `doom-font' -- the primary font to use
-;; - `doom-variable-pitch-font' -- a non-monospace font (where applicable)
-;; - `doom-big-font' -- used for `doom-big-font-mode'; use this for
-;;   presentations or streaming.
-;; - `doom-unicode-font' -- for unicode glyphs
-;; - `doom-serif-font' -- for the `fixed-pitch-serif' face
-;;
-;; See 'C-h v doom-font' for documentation and more examples of what they
-;; accept. For example:
-;;
-;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
-;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
-;;
-;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
-;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
-;; refresh your font settings. If Emacs still can't find your font, it likely
-;; wasn't installed correctly. Font issues are rarely Doom's fault.
 
 ;; Minimal UI
 (package-initialize)
@@ -36,13 +11,8 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; Choose some fonts
-;; (set-face-attribute 'default nil :family "Iosevka")
-;; (set-face-attribute 'variable-pitch nil :family "Iosevka Aile")
-;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+;; Org-Modern-mode config
 
-;; Add frame borders and window dividers
-;;q
 (modify-all-frames-parameters
  '((right-divider-width . 40)
    (internal-border-width . 40)))
@@ -78,13 +48,20 @@
 
 (global-org-modern-mode)
 
-(setq doom-theme 'doom-ayu-mirage
+; Edit defaults
+
+(setq doom-theme 'doom-ayu-mirage ; theme
       doom-font (font-spec :family "FuraMono Nerd Font Mono" :size 20 :weight 'medium)
-      doom-variable-pitch-font (font-spec :family "Cousine Nerd Font" :size 24 :weight 'medium))
+      doom-variable-pitch-font (font-spec :family "Cousine Nerd Font" :size 24 :weight 'medium)
+      display-line-numbers-type 'relative ; makes it easier to jump lines
+      org-directory "~/org/") ; FIXME: Fix wylinotation location and possibly name
 
-(setq display-line-numbers-type t)
+(setq doom-fallback-buffer-name "► Doom"
+      +doom-dashboard-name "► Doom") ; Nicer buffer names
 
-(setq org-directory "~/org/")
+(remove-hook 'window-setup-hook #'doom-init-theme-h)
+(add-hook 'after-init-hook #'doom-init-theme-h 'append)
+(delq! t custom-theme-load-path)
 
 (setq-default
  delete-by-moving-to-trash t                    ; Deletes file to .trash
@@ -98,10 +75,17 @@
       password-cache-expiry nil                 ; I can trust my computers ... can't I?
       scroll-margin 2)                          ; It's nice to maintain a little margin
 
+; Modeline changes
+
 (display-time-mode 1)                           ; Enable time in the mode-line
 
 (unless (string-match-p "^Power N/A" (battery)) ; On laptops...
   (display-battery-mode 1))                     ; it's nice to know how much power you have
+
+(custom-set-faces!
+  '(doom-modeline-buffer-modified :foreground "orange"))
+
+; Dashboard changes
 
 (defun +doom-dashboard-setup-modified-keymap ()
   (setq +doom-dashboard-mode-map (make-sparse-keymap))
@@ -119,4 +103,89 @@
 (add-transient-hook! #'+doom-dashboard-mode :append (+doom-dashboard-setup-modified-keymap))
 (add-hook! 'doom-init-ui-hook :append (+doom-dashboard-setup-modified-keymap))
 
-(map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open)
+
+; Edited keybinds
+
+(map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open) ; Doom dashboard is great and useful
+(map! :leader :desc "yank" "y" #'yank) ; Fix pasting, (S-insertchar) doesn't work for
+
+(map! :leader :desc "quick functions" "z")
+(map! :leader :desc "open config" "z c" #'config)
+(map! :leader :desc "open doom config" "z d" #'doomconfig)
+(map! :leader :desc "sync config files" "z s" #'configsync)
+(map! :leader :desc "open wynotes" "z w" #'wynotes)
+
+
+; SVG-Tags
+; from https://github.com/rougier/svg-tag-mode
+
+; This replaces any occurence of :#TAG1:#TAG2:…:$ with a dyanmic collection of SVG tags.
+(setq svg-tag-tags
+      '(("\\(:[A-Z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
+                                           (svg-tag-make tag :beg 1 :inverse t
+                                                          :margin 0 :crop-right t))))
+        (":[A-Z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
+                                           (svg-tag-make tag :beg 1 :end -1
+                                                         :margin 0 :crop-left t))))))
+; Replaces any occurence of :XXX|YYY: with two adjacent dynamic SVG tags displaying XXX and YYY
+(setq svg-tag-tags
+      '(("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+                                     (svg-tag-make tag :beg 2))))
+        ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+                                       (svg-tag-make tag :beg 2 :end -1))))))
+
+; Replaces any occurence of :XXX: with a dynamic SVG tag displaying XXX
+(setq svg-tag-tags
+      '(("\\(:[A-Z]+:\\)" . ((lambda (tag)
+                               (svg-tag-make tag :beg 1 :end -1))))))
+
+; Custom functions
+
+; Config
+(defun config ()
+  "switch to the config directory"
+  (interactive)
+  (find-file "~/wyconfig/README.md"))
+
+(defun doomconfig ()
+  "switch to the emacs config directory"
+  (interactive)
+  (find-file "~/wyconfig/doom/config.el")) ; NOTE: OMG its the file
+
+(defun configsync ()
+  "sync the ~/wyconfig directory to ~/.config"
+  (interactive)
+  (shell-command-on-region
+   ;; beginning and end of buffer
+   (point-min)
+   (point-max)
+   ;; command and parameters
+   "rsync -a ~/wyconfig/ ~/.config/"
+   ;; replace?
+
+   ;; name of the error buffer
+   "*rsync Error Buffer*"
+   t)) ;; also consider that it is possible to run shell comands in emacs using M+!
+
+; Notational velocity
+
+(defun wynotes ()
+  "switch to wynotes directory"
+  (interactive)
+  (find-file "~/Documents/wynotation/index.org")) ; FIXME: Is this name too long? could change to wynotes or wynotation
+
+(defun header ()
+  "insert header for notes"
+  (interactive)
+  )
+
+;; Auto completion provided by my g copilot
+
+;; accept completion from copilot and fallback to company
+(use-package! copilot
+  :hook (prog-mode . copilot-mode)
+  :bind (("C-TAB" . 'copilot-accept-completion-by-word)
+         ("C-<tab>" . 'copilot-accept-completion-by-word)
+         :map copilot-completion-map
+         ("<tab>" . 'copilot-accept-completion)
+         ("TAB" . 'copilot-accept-completion)))
