@@ -46,7 +46,7 @@
  org-agenda-current-time-string
  "⭠ now ─────────────────────────────────────────────────")
 
-(global-org-modern-mode)
+; (global-org-modern-mode)
 
 ; Edit defaults
 
@@ -108,12 +108,14 @@
 
 (map! :leader :desc "Dashboard" "d" #'+doom-dashboard/open) ; Doom dashboard is great and useful
 (map! :leader :desc "yank" "y" #'yank) ; Fix pasting, (S-insertchar) doesn't work for
+(map! :desc "yank" "C p" #'yank)
 
 (map! :leader :desc "quick functions" "z")
 (map! :leader :desc "open config" "z c" #'config)
 (map! :leader :desc "open doom config" "z d" #'doomconfig)
 (map! :leader :desc "sync config files" "z s" #'configsync)
-(map! :leader :desc "open wynotes" "z w" #'wynotes)
+(map! :leader :desc "open wynotes" "z w o" #'wynotes)
+(map! :leader :desc "enter wynote headr" "z w h" #'wynoteheader)
 
 
 ; SVG-Tags
@@ -172,12 +174,20 @@
 (defun wynotes ()
   "switch to wynotes directory"
   (interactive)
-  (find-file "~/Documents/wynotation/index.org")) ; FIXME: Is this name too long? could change to wynotes or wynotation
+  (find-file "~/org/wynotation/index.org")) ; FIXME: Is this name too long? could change to wynotes or wynotation
 
-(defun header ()
-  "insert header for notes"
-  (interactive)
-  )
+(defun wynotesearch ()
+    "search for a note in wynotes"
+    (interactive)
+    (consult-ripgrep "~/org/wynotation/"))
+
+(defun wynoteheader ()
+  "Insert \"#+TITLE: ...\" at the beginning of org file."
+  (insert "#+TITLE: " (file-name-nondirectory (file-name-sans-extension (buffer-file-name))) "\n") ;; filename only, without dir or extension
+  (insert "#+AUTHOR: " (user-full-name) "\n")
+  (insert "#+OPTIONS: H:2 num:t toc:nil\n")
+  (insert "#+OPTIONS: ^:nil\n")
+  (insert "#+OPTIONS: <:nil todo:nil *:t ^:{} @:t ::t |:t TeX:t\n"))
 
 ;; Auto completion provided by my g copilot
 

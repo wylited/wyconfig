@@ -61,8 +61,8 @@ window:
   # least `2`, while using a value of `0` for columns and lines will fall back
   # to the window manager's recommended size
   dimensions:
-   columns: 0
-   lines: 0
+   columns: 192
+   lines: 108
 
   # Window position (changes require restart)
   #
@@ -81,7 +81,7 @@ window:
    y: 10
 
   # Spread additional padding evenly around the terminal content.
-  dynamic_padding: false
+  dynamic_padding: true
 
   # Window decorations
   #
@@ -143,6 +143,7 @@ window:
 font:
   normal:
     family: JetBrainsMono Nerd Font
+  size: 10.0
 
   # Bold font face
   #bold:
